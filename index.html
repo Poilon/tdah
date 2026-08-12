@@ -354,6 +354,11 @@
         Voici ce que vos réponses indiquent — à confirmer ou infirmer par un professionnel.
       </p>
       <table class="dsm" id="dsm-table"></table>
+      <p class="small muted" style="margin:14px 0 0">
+        <span class="yes">●</span> critère rempli d'après vos réponses ·
+        <span class="unk">◐</span> incertain ou à vérifier ·
+        <span class="no">○</span> critère non rempli
+      </p>
     </div>
 
     <div class="panel">
@@ -581,33 +586,33 @@ const STEPS = [
 
   /* ---------- 3. CONTEXTE ---------- */
   { kind:"sep", ax:"CTX", title:"Partie 3 — Le contexte",
-    body:"C'est la partie que la plupart des tests en ligne sautent, et c'est pourtant elle qui fait la différence entre un score et un début de sens clinique : depuis quand, où, à quel prix, et est-ce que quelque chose d'autre pourrait l'expliquer ?" },
+    body:"Un score de symptômes seul ne veut rien dire : ces dernières questions servent à le replacer dans une histoire. <strong>Elles ne présument pas que quelque chose vous pose problème</strong> — si rien de ce qui précède ne vous concerne, répondez-le franchement, c'est une information aussi utile que l'inverse." },
 
-  { id:"C1", ax:"CTX", type:"choice", tag:"Contexte",
-    text:"Avant vos 12 ans, plusieurs de ces difficultés étaient-elles déjà présentes ?",
-    hint:"Bulletins scolaires (« bavard », « rêveur », « pourrait mieux faire », « étourdi »), souvenirs de vos parents, redoublements, remarques répétées.",
+  { id:"C1", ax:"CTX", type:"choice", tag:"Enfance",
+    text:"Avant vos 12 ans, certains des comportements décrits jusqu'ici étaient-ils déjà présents ?",
+    hint:"Bulletins scolaires (« bavard », « rêveur », « pourrait mieux faire », « étourdi »), souvenirs de vos parents, remarques répétées.",
     options:[
-      {v:4, l:"Oui, clairement", s:"C'était visible et commenté"},
-      {v:3, l:"Plutôt oui",      s:"Avec le recul, des signes existaient"},
-      {v:2, l:"Je ne sais pas",  s:"Trop peu de souvenirs ou d'informations"},
-      {v:1, l:"Plutôt non"},
-      {v:0, l:"Non, c'est venu bien plus tard"}
+      {v:4, l:"Oui, clairement",  s:"C'était visible et commenté à l'époque"},
+      {v:3, l:"Plutôt oui",       s:"Avec le recul, des signes existaient"},
+      {v:2, l:"Je ne sais pas",   s:"Trop peu de souvenirs ou d'informations"},
+      {v:1, l:"Plutôt non",       s:"S'il y a quelque chose, c'est venu plus tard"},
+      {v:0, l:"Non, rien de tel", s:"Ni à l'époque, ni aujourd'hui"}
     ]},
 
   { id:"C2", ax:"CTX", type:"multi", tag:"Contexte",
-    text:"Dans quels domaines ces difficultés se manifestent-elles ?",
-    hint:"Le DSM-5 exige au moins deux contextes différents. Plusieurs réponses possibles.",
+    text:"Y a-t-il des domaines où ces comportements vous posent concrètement problème ?",
+    hint:"Le DSM-5 exige au moins deux contextes différents. Plusieurs réponses possibles — ou la dernière si aucun.",
     options:[
       {v:"travail",  l:"Travail ou études"},
       {v:"maison",   l:"Maison, tâches domestiques, administratif"},
       {v:"relations",l:"Relations : couple, famille, amis"},
       {v:"loisirs",  l:"Loisirs, sport, activités"},
       {v:"argent",   l:"Argent, santé, conduite, rendez-vous"},
-      {v:"aucun",    l:"Nulle part en particulier", excl:true}
+      {v:"aucun",    l:"Aucun : rien de tout cela ne me gêne vraiment", excl:true}
     ]},
 
   { id:"C3", ax:"CTX", type:"scale", tag:"Retentissement",
-    text:"À quel point ces difficultés vous gênent-elles dans votre travail ou vos études ?",
+    text:"À quel point les comportements décrits vous gênent-ils dans votre travail ou vos études ?",
     scale:["Pas du tout","Un peu","Moyennement","Beaucoup","Énormément"] },
 
   { id:"C4", ax:"CTX", type:"scale", tag:"Retentissement",
@@ -620,13 +625,14 @@ const STEPS = [
     scale:["Pas du tout","Un peu","Moyennement","Beaucoup","Énormément"] },
 
   { id:"C6", ax:"CTX", type:"choice", tag:"Ancienneté",
-    text:"Depuis quand ces difficultés durent-elles, dans l'ensemble ?",
+    text:"Si ces comportements sont présents chez vous, depuis quand le sont-ils ?",
     options:[
       {v:"toujours", l:"Depuis toujours, aussi loin que je me souvienne"},
       {v:"ado",      l:"Depuis l'adolescence"},
       {v:"annees",   l:"Depuis plusieurs années"},
       {v:"recent2",  l:"Depuis moins de 2 ans"},
-      {v:"mois",     l:"Depuis quelques mois seulement"}
+      {v:"mois",     l:"Depuis quelques mois seulement"},
+      {v:"aucune",   l:"Ils ne sont pas vraiment présents chez moi"}
     ]},
 
   { id:"C7", ax:"CTX", type:"multi", tag:"Diagnostic différentiel",
@@ -643,7 +649,7 @@ const STEPS = [
     ]},
 
   { id:"C8", ax:"CTX", type:"freq", tag:"Compensation",
-    text:"Vous tenez debout grâce à des béquilles d'organisation — listes, alarmes, minuteurs, rappels, un proche qui gère — et sans elles tout déraille." }
+    text:"Vous vous appuyez sur des béquilles d'organisation — listes, alarmes, minuteurs, rappels, un proche qui gère — et sans elles les choses vous échappent." }
 ];
 
 /* ======================= état & navigation ======================= */
@@ -996,10 +1002,11 @@ function showResults() {
      "<b>Apparition avant 12 ans</b> — plusieurs symptômes présents dans l'enfance.",
      r.critB ? "Vous décrivez des signes déjà présents avant 12 ans."
      : r.critB_unknown ? "Vous ne savez pas : c'est très fréquent. Un parent, un ancien bulletin scolaire ou un carnet de correspondance sont ici plus fiables que la mémoire."
-     : "Vous situez le début plus tard. Un TDAH n'apparaît pas à l'âge adulte : si les difficultés sont récentes, une autre cause est plus probable."],
+     : r.childhood === 0 ? "Vous ne décrivez rien de tel dans l'enfance."
+     : "Vous situez le début plus tard. Le TDAH n'apparaît pas à l'âge adulte : quand les symptômes sont récents, une autre cause est nettement plus probable."],
     ["C", r.critC,
      "<b>Présence dans au moins deux contextes</b> — travail/études, maison, relations, loisirs…",
-     r.contexts.length ? "Contextes cochés : " + r.contexts.length + "." : "Aucun contexte identifié."],
+     r.contexts.length ? "Contextes cochés : " + r.contexts.length + "." : "Vous n'identifiez aucun domaine où cela vous pose problème."],
     ["D", r.critD,
      "<b>Retentissement significatif</b> — les symptômes réduisent concrètement la qualité du fonctionnement.",
      "Score de retentissement global : " + r.impair + "/100" + (r.impairMax >= 3 ? " — élevé." : r.impairMax >= 2 ? " — modéré." : " — faible.")],
@@ -1190,6 +1197,12 @@ function drawRadar(r) {
 
 /* ======================= export ======================= */
 
+function optionLabel(qid, v) {
+  const q = QUESTIONS.find(x => x.id === qid);
+  const o = q && q.options ? q.options.find(x => x.v === v) : null;
+  return o ? o.l : "—";
+}
+
 function summaryText() {
   const r = window.__result;
   const L = [];
@@ -1210,7 +1223,7 @@ function summaryText() {
   L.push("  B. Signes avant 12 ans : " + (r.critB ? "oui" : r.critB_unknown ? "ne sait pas" : "non"));
   L.push("  C. Au moins 2 contextes : " + (r.critC ? "oui (" + r.contexts.length + ")" : "non"));
   L.push("  D. Retentissement : " + r.impair + "/100");
-  L.push("  E. Facteurs confondants signalés : " + (r.confounds.length ? r.confounds.join(", ") : "aucun") + " ; ancienneté : " + (r.onset || "—"));
+  L.push("  E. Facteurs confondants signalés : " + (r.confounds.length ? r.confounds.join(", ") : "aucun") + " ; ancienneté : " + optionLabel("C6", r.onset));
   L.push("");
   L.push("Présentation suggérée : " + document.getElementById("verdict-title").textContent);
   L.push("");
